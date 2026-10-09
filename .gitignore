@@ -1,0 +1,7 @@
+venv/
+.python-version
+__pycache__/
+*.pt
+*.mp4
+*.avi
+.env
