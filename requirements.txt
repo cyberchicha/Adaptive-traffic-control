@@ -4,3 +4,5 @@ fastapi
 uvicorn
 numpy
 sort-track
+lap
+scikit-image
