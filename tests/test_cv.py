@@ -7,6 +7,7 @@ import cv2
 import sys
 import os
 import logging
+import numpy as np
 
 # Configure logging format
 logging.basicConfig(
@@ -32,13 +33,20 @@ def main() -> None:
     logging.info("--- Initializing Full CV Pipeline ---")
     
     # 1. Initialize camera calibration
-    # (Since the matrix is not saved to a file yet, 6 points must be clicked on startup)
     calibrator = CameraCalibration(VIDEO_PATH)
+    calib_config_path = os.path.join(ROOT_DIR, "data", "configs", "calibration.json")
+
     calibrator.load_first_frame()
-    logging.info("Please calibrate the camera for speed estimation.")
-    calibrator.collect_2d_points()
-    calibrator.collect_3d_points()
-    calibrator.calibrate()
+
+    if not calibrator.load_calibration(calib_config_path):
+        logging.warning("Calibration not found. Launching interactive calibration...")
+        logging.info("Please calibrate the camera for speed estimation.")
+        calibrator.collect_2d_points()
+        calibrator.collect_3d_points()
+        calibrator.calibrate()
+        calibrator.save_calibration(calib_config_path)
+    else:
+        logging.info("Calibration loaded successfully from JSON.")
 
     # 2. Initialize lane manager
     lane_manager = LaneManager()
@@ -55,7 +63,14 @@ def main() -> None:
     tracker = VehicleTracker(max_age=30, min_hits=3, iou_threshold=0.3)
     
     # 4. Initialize traffic analyzer
-    analyzer = TrafficAnalyzer(lane_manager=lane_manager, calibrator=calibrator, fps=30)
+
+    cap = cv2.VideoCapture(VIDEO_PATH)
+    actual_fps = cap.get(cv2.CAP_PROP_FPS)
+    if actual_fps == 0 or np.isnan(actual_fps):
+        actual_fps = 25.0
+    cap.release()
+
+    analyzer = TrafficAnalyzer(lane_manager=lane_manager, calibrator=calibrator, fps=actual_fps)
     
     cap = cv2.VideoCapture(VIDEO_PATH)
     if not cap.isOpened():
@@ -63,6 +78,8 @@ def main() -> None:
         return
 
     logging.info("Starting real-time processing. Press 'q' to stop.")
+
+    frame_count = 0
     
     while cap.isOpened():
         ret, frame = cap.read()
@@ -78,6 +95,18 @@ def main() -> None:
         
         # Step 3: Analytics (speed, queue lengths, wait times)
         metrics = analyzer.process_frame(tracked_objects)
+
+        if frame_count % 15 == 0:
+            print(f"\n--- Фрейм {frame_count} | Поточні метрики ---")
+            print(f"Черги: {metrics['queue_lengths']}")
+            
+            if metrics["speeds"]:
+                speeds_str = ", ".join([f"ID:{k} - {v:.1f}km/h" for k, v in metrics["speeds"].items()])
+                print(f"Швидкості: {speeds_str}")
+                
+            if metrics["wait_times"]:
+                waits_str = ", ".join([f"ID:{k} - {v:.1f}s" for k, v in metrics["wait_times"].items()])
+                print(f"Час очікування: {waits_str}")
         
         # Visualization: Draw semi-transparent lanes
         display_frame = lane_manager.draw_lanes(frame, alpha=0.3)

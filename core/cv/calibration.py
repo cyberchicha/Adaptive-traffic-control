@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import json
+import os
 
 class CameraCalibration:
     """
@@ -169,3 +171,39 @@ class CameraCalibration:
         world_point = s * left_side - right_side
         
         return float(world_point[0][0]), float(world_point[1][0])
+
+    def save_calibration(self, config_path="data/configs/calibration.json"):
+        """
+        Saves 2D and 3D points to a JSON file.
+        """
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+
+        data = {
+            "points_2d": np.array(self.image_points).tolist(),
+            "points_3d": np.array(self.object_points).tolist()
+        }
+        
+        with open(config_path, 'w') as f:
+            json.dump(data, f, indent=4)
+        print(f"[SUCCESS] Calibration saved to {config_path}")
+
+    def load_calibration(self, config_path="data/configs/calibration.json"):
+        """
+        Loads points from JSON and automatically computes the perspective matrix.
+        """
+        if not os.path.exists(config_path):
+            return False
+            
+        try:
+            with open(config_path, 'r') as f:
+                data = json.load(f)
+                
+            self.image_points = np.array(data["points_2d"], dtype=np.float32)
+            self.object_points = np.array(data["points_3d"], dtype=np.float32)
+            
+            self.calibrate()
+            print(f"[SUCCESS] Loaded calibration from {config_path}")
+            return True
+        except Exception as e:
+            print(f"[ERROR] Failed to load calibration: {e}")
+            return False
