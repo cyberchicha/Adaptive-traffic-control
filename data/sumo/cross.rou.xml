@@ -1,0 +1,45 @@
+<routes>
+    <!-- VEHICLE CONFIGURATION -->
+    <vType id="car" accel="2.6" decel="4.5" sigma="0.5" length="5.0" maxSpeed="13.89" color="1,1,0"/>
+
+    <!-- Define directional routes through the intersection -->
+    <route id="route_n2s" edges="n2c c2s"/>
+    <route id="route_s2n" edges="s2c c2n"/>
+    <route id="route_w2e" edges="w2c c2e"/>
+    <route id="route_e2w" edges="e2c c2w"/>
+
+    <!-- 
+        Vehicle traffic generation flows.
+        Simulation runs for 3600 seconds (1 hour).
+        vehsPerHour defines the traffic volume intensity for each direction.
+    -->
+    <flow id="flow_n" type="car" route="route_n2s" begin="0" end="3600" vehsPerHour="600"/>
+    <flow id="flow_s" type="car" route="route_s2n" begin="0" end="3600" vehsPerHour="600"/>
+    <flow id="flow_w" type="car" route="route_w2e" begin="0" end="3600" vehsPerHour="300"/>
+    <flow id="flow_e" type="car" route="route_e2w" begin="0" end="3600" vehsPerHour="300"/>
+
+    <!-- PEDESTRIAN CONFIGURATION -->
+    <!-- Size increased to 1.0x1.0m for better visualization during testing -->
+    <vType id="pedestrian" vClass="pedestrian" guiShape="pedestrian" width="1.0" length="1.0" maxSpeed="1.5" color="0,255,0"/>
+
+    <!-- 
+        Pedestrian flows interacting with crosswalks.
+        departPos="95": Pedestrians spawn 5 meters before the intersection to bypass long walk times.
+        arrivalPos="5": Pedestrians despawn immediately after crossing the street.
+    -->
+    <personFlow id="ped_cross_north" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+        <walk edges="n2c c2n" arrivalPos="5"/> 
+    </personFlow>
+    
+    <personFlow id="ped_cross_south" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+        <walk edges="s2c c2s" arrivalPos="5"/> 
+    </personFlow>
+
+    <personFlow id="ped_cross_west" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+        <walk edges="w2c c2w" arrivalPos="5"/> 
+    </personFlow>
+    
+    <personFlow id="ped_cross_east" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+        <walk edges="e2c c2e" arrivalPos="5"/> 
+    </personFlow>
+</routes>

@@ -1,0 +1,14 @@
+<!-- 
+    Master configuration file for the SUMO sandbox simulation.
+    Binds the generated network (.net.xml) and the traffic routes (.rou.xml).
+-->
+<configuration>
+    <input>
+        <net-file value="cross.net.xml"/>
+        <route-files value="cross.rou.xml"/>
+    </input>
+    <time>
+        <begin value="0"/>
+        <end value="3600"/>
+    </time>
+</configuration>

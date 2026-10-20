@@ -1,0 +1,25 @@
+<edges>
+    <!-- 
+        Defines the physical road segments connecting the nodes.
+        Attributes:
+        - priority: Right-of-way priority (1 is default).
+        - numLanes: Number of vehicle lanes per direction.
+        - speed: Speed limit in m/s (13.89 m/s approx. 50 km/h).
+    -->
+
+    <!-- North to Center and back -->
+    <edge id="n2c" from="n" to="center" priority="1" numLanes="2" speed="13.89"/>
+    <edge id="c2n" from="center" to="n" priority="1" numLanes="2" speed="13.89"/>
+
+    <!-- South to Center and back -->
+    <edge id="s2c" from="s" to="center" priority="1" numLanes="2" speed="13.89"/>
+    <edge id="c2s" from="center" to="s" priority="1" numLanes="2" speed="13.89"/>
+
+    <!-- East to Center and back -->
+    <edge id="e2c" from="e" to="center" priority="1" numLanes="2" speed="13.89"/>
+    <edge id="c2e" from="center" to="e" priority="1" numLanes="2" speed="13.89"/>
+
+    <!-- West to Center and back -->
+    <edge id="w2c" from="w" to="center" priority="1" numLanes="2" speed="13.89"/>
+    <edge id="c2w" from="center" to="w" priority="1" numLanes="2" speed="13.89"/>
+</edges>
