@@ -109,7 +109,14 @@ class TrafficAnalyzer:
 
             # FORMATION OF METRICS N(t) AND L(t)
             # If the vehicle is moving slower than 5 km/h, it is considered part of the queue
-            is_queued = vehicle["speed_kmh"] < 5.0
+            # Safeguard: if the speed is None, set it to the default of 30 km/h.
+            current_speed = vehicle.get("speed_kmh")
+            if current_speed is None:
+                current_speed = 30.0
+                vehicle["speed_kmh"] = current_speed
+                
+            # If a vehicle is moving slower than 5 km/h, it is considered part of the queue.
+            is_queued = current_speed < 5.0
             
             if is_queued:
                 metrics["N"][lane_id] += 1
