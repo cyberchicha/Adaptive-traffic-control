@@ -10,3 +10,6 @@ data/weights/
 *.mp4
 *.pt
 .env
+models/
+data/logs/
+data/ai_evaluation_metrics.csv
