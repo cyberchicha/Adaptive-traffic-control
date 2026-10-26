@@ -1,0 +1,11 @@
+<viewsettings>
+    <scheme name="standard"/>
+    <!-- Automatically zoom the camera toward the center -->
+    <viewport zoom="1200" x="100" y="100"/>
+    
+    <!-- Highlight trajectories within the intersection using the color of the current traffic light (green/red) -->
+    <junctions drawLinkJunctionColors="true"/>
+    
+    <!-- Automatically color vehicles based on their waiting time -->
+    <vehicles colorScheme="by waiting time"/>
+</viewsettings>

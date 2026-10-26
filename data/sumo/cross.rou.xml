@@ -27,19 +27,19 @@
         departPos="95": Pedestrians spawn 5 meters before the intersection to bypass long walk times.
         arrivalPos="5": Pedestrians despawn immediately after crossing the street.
     -->
-    <personFlow id="ped_cross_north" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+    <personFlow id="ped_cross_north" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="85">
         <walk edges="n2c c2n" arrivalPos="5"/> 
     </personFlow>
     
-    <personFlow id="ped_cross_south" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+    <personFlow id="ped_cross_south" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="85">
         <walk edges="s2c c2s" arrivalPos="5"/> 
     </personFlow>
 
-    <personFlow id="ped_cross_west" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+    <personFlow id="ped_cross_west" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="85">
         <walk edges="w2c c2w" arrivalPos="5"/> 
     </personFlow>
     
-    <personFlow id="ped_cross_east" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="95">
+    <personFlow id="ped_cross_east" type="pedestrian" begin="0" end="3600" personsPerHour="500" departPos="85">
         <walk edges="e2c c2e" arrivalPos="5"/> 
     </personFlow>
 </routes>
