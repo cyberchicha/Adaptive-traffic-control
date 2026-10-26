@@ -20,7 +20,7 @@
 
     <!-- PEDESTRIAN CONFIGURATION -->
     <!-- Size increased to 1.0x1.0m for better visualization during testing -->
-    <vType id="pedestrian" vClass="pedestrian" guiShape="pedestrian" width="1.0" length="1.0" maxSpeed="1.5" color="0,255,0"/>
+    <vType id="pedestrian" vClass="pedestrian" guiShape="pedestrian" width="0.6" length="1.0" maxSpeed="1.5" color="0,255,0"/>
 
     <!-- 
         Pedestrian flows interacting with crosswalks.
