@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 
-# Налаштування логування
+# Logging settings
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -10,14 +10,13 @@ sys.path.append(ROOT_DIR)
 
 from core.rl.env import TrafficEnv
 
-# Текстова розшифровка фаз для вашої зручності
 PHASE_NAMES = {
-    0: "Північ-Південь: ЗЕЛЕНИЙ",
-    1: "Північ-Південь: ОЧИЩЕННЯ (Зелений закінчується)",
-    2: "Північ-Південь: ЖОВТИЙ",
-    3: "Захід-Схід: ЗЕЛЕНИЙ",
-    4: "Захід-Схід: ОЧИЩЕННЯ (Зелений закінчується)",
-    5: "Захід-Схід: ЖОВТИЙ"
+    0: "North-South: GREEN",
+    1: "North-South: CLEARING (Green is ending)",
+    2: "North-South: YELLOW",
+    3: "West-East: GREEN",
+    4: "West-East: CLEARING (Green is ending)",
+    5: "West-East: YELLOW"
 }
 
 def main():
@@ -27,27 +26,27 @@ def main():
         logging.error(f"SUMO config not found at: {sumo_cfg_path}")
         return
 
-    logging.info("--- Ініціалізація RL Середовища ---")
+    logging.info("--- Initialization of RL Environment ---")
     env = TrafficEnv(sumo_cfg_path=sumo_cfg_path, render_mode="human")
     obs, info = env.reset()
     
-    logging.info("Запуск 60 кроків (перемикання світлофора кожні 10 секунд)...")
+    logging.info("Starting 60 steps (traffic light switching every 10 seconds)...")
     
     for step in range(60):
-        # Тримаємо світло 9 секунд (дія 0), на 10-ту секунду - перемикаємо (дія 1)
+        # Keeping the light on for 9 seconds (action 0); at the 10th second, switch it (action 1)
         if step > 0 and step % 10 == 0:
             action = 1
-            logging.info(">>> АГЕНТ ВІДПРАВИВ КОМАНДУ ПЕРЕМКНУТИ СВІТЛОФОР <<<")
+            logging.info(">>> The agent sent a command to switch the traffic light <<<")
         else:
             action = 0
             
         obs, reward, terminated, truncated, info = env.step(action)
         
         current_phase = int(obs[-1])
-        phase_name = PHASE_NAMES.get(current_phase, "Невідомо")
+        phase_name = PHASE_NAMES.get(current_phase, "Unknown")
         
-        # Виводимо статус кожної секунди
-        logging.info(f"Секунда {step+1:02d} | {phase_name} | Загальна черга (Штраф): {reward}")
+        # Displaying the status every second
+        logging.info(f"Second {step+1:02d} | {phase_name} | Total Queue (Penalty): {reward}")
         
         if terminated or truncated:
             break
