@@ -135,6 +135,10 @@ class TrafficEnv(gym.Env):
             "sum_q_norm_s": 0.0,
             "wait_time_s": 0.0,
             "wait_peds_s": 0,
+            "queue_veh_s": 0,
+            "queue_len_s": 0.0,
+            "mean_wait_s_sum": 0.0,
+            "max_queue_len_m": 0.0,
         }
 
         for _ in range(int(seconds)):
@@ -154,6 +158,8 @@ class TrafficEnv(gym.Env):
             curr_halted = set()
             sec_q_norm = 0.0
             sec_wait = 0.0
+            sec_q_len = 0.0
+            sec_max_q = 0.0
 
             for lane in self.lanes:
                 lane_length = self.lane_lengths[lane]
@@ -168,17 +174,28 @@ class TrafficEnv(gym.Env):
                         queued_dists.append(max(0.0, lane_length - pos))
 
                 q_len = min(lane_length, self._compute_spatial_queue_length(queued_dists))
+                sec_q_len += q_len
+                if q_len > sec_max_q:
+                    sec_max_q = q_len
                 if lane_length > 0:
                     sec_q_norm += min(1.0, max(0.0, q_len / lane_length))
+
+            sec_peds = sum(
+                1 for pid in traci.person.getIDList()
+                if traci.person.getWaitingTime(pid) > 0.0
+            )
+            sec_mean_wait = (sec_wait / len(curr_incoming)) if curr_incoming else 0.0
 
             acc["throughput"] += len(self._prev_incoming_vehs - curr_incoming)
             acc["new_stops"] += len(curr_halted - self._prev_halted_vehs)
             acc["sum_q_norm_s"] += sec_q_norm
             acc["wait_time_s"] += sec_wait
-            acc["wait_peds_s"] += sum(
-                1 for pid in traci.person.getIDList()
-                if traci.person.getWaitingTime(pid) > 0.0
-            )
+            acc["wait_peds_s"] += sec_peds
+            acc["queue_veh_s"] += len(curr_halted)
+            acc["queue_len_s"] += sec_q_len
+            acc["mean_wait_s_sum"] += sec_mean_wait
+            if sec_max_q > acc["max_queue_len_m"]:
+                acc["max_queue_len_m"] = sec_max_q
 
             self._prev_incoming_vehs = curr_incoming
             self._prev_halted_vehs = curr_halted
@@ -317,11 +334,18 @@ class TrafficEnv(gym.Env):
             "sum_q_norm_s": 0.0,
             "wait_time_s": 0.0,
             "wait_peds_s": 0,
+            "queue_veh_s": 0,
+            "queue_len_s": 0.0,
+            "mean_wait_s_sum": 0.0,
+            "max_queue_len_m": 0.0,
         }
 
         def _merge(part: dict) -> None:
             for k in step_acc:
-                step_acc[k] += part[k]
+                if k == "max_queue_len_m":
+                    step_acc[k] = max(step_acc[k], part[k])
+                else:
+                    step_acc[k] += part[k]
 
         if target_action != self.current_green_action and self.green_elapsed >= self.min_green_time:
             if self.ped_clear_time > 0:
@@ -347,6 +371,14 @@ class TrafficEnv(gym.Env):
             new_stops=step_acc["new_stops"],
             throughput=step_acc["throughput"],
         )
+
+        secs = max(1, step_acc["seconds"])
+        info["step_avg_queue_vehicles"] = round(step_acc["queue_veh_s"] / secs, 2)
+        info["step_avg_queue_length_m"] = round(step_acc["queue_len_s"] / secs, 2)
+        info["step_max_queue_length_m"] = round(step_acc["max_queue_len_m"], 2)
+        info["step_mean_waiting_time_s"] = round(step_acc["mean_wait_s_sum"] / secs, 2)
+        info["step_avg_waiting_pedestrians"] = round(step_acc["wait_peds_s"] / secs, 2)
+
         reward = self._compute_reward(step_acc)
 
         terminated = traci.simulation.getTime() >= self.max_sim_time
