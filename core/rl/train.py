@@ -11,49 +11,49 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.append(ROOT_DIR)
 
+from config import SUMO_CFG_PATH, MODELS_DIR, LOGS_DIR
 from core.rl.env import TrafficEnv
 
+SEED = 42
+TOTAL_TIMESTEPS = 100000  # ~180-210 full 1-hour episodes with delta_time=5s
+
 def main():
-    sumo_cfg_path = os.path.join(ROOT_DIR, "data", "sumo", "cross.sumocfg")
-    
-    # Creating a folder to save trained models
-    models_dir = os.path.join(ROOT_DIR, "models")
-    os.makedirs(models_dir, exist_ok=True)
-
-    logging.info("Initialization of the environment...")
-
-    log_dir = os.path.join(ROOT_DIR, "data", "logs")
+    os.makedirs(MODELS_DIR, exist_ok=True)
+    log_dir = LOGS_DIR / "train_final"
     os.makedirs(log_dir, exist_ok=True)
 
-    # render_mode="none" disables the SUMO graphics, so that training can be done faster
-    env = TrafficEnv(sumo_cfg_path=sumo_cfg_path, render_mode="none")
+    logging.info("Initializing TrafficEnv...")
+    env = TrafficEnv(sumo_cfg_path=SUMO_CFG_PATH, render_mode="none")
+    env = Monitor(env, str(log_dir))
 
-    # Monitor automatically records statistics for each episode
-    env = Monitor(env, log_dir)
+    # Validate Gymnasium API compliance before training
+    check_env(env, warn=True)
 
-    # Built-in check for SB3,to ensure that the environment is written without errors
-    check_env(env)
-
-    logging.info("Creating a DQN Agent...")
+    logging.info("Creating DQN agent...")
     model = DQN(
-        "MlpPolicy", 
-        env, 
-        learning_rate=1e-3, 
-        buffer_size=50000, 
-        exploration_fraction=0.1, 
+        "MlpPolicy",
+        env,
+        learning_rate=1e-2,
+        gamma=0.99,
+        buffer_size=50000,
+        learning_starts=1000,
+        batch_size=64,
+        target_update_interval=2000,
+        exploration_fraction=0.15,
         exploration_final_eps=0.02,
-        verbose=1
+        seed=SEED,
+        verbose=1,
     )
 
-    new_logger = configure(log_dir, ["stdout", "csv"])
+    new_logger = configure(str(log_dir), ["stdout", "csv"])
     model.set_logger(new_logger)
 
-    logging.info("Starting training for 10,000 steps...")
-    model.learn(total_timesteps=10000, progress_bar=True)
+    logging.info(f"Starting training for {TOTAL_TIMESTEPS} steps...")
+    model.learn(total_timesteps=TOTAL_TIMESTEPS, progress_bar=True)
 
-    model_path = os.path.join(models_dir, "dqn_traffic_agent")
-    model.save(model_path)
-    logging.info(f"Training completed! The neural network has been saved to {model_path}.zip")
+    model_path = MODELS_DIR / "dqn_traffic_agent"
+    model.save(str(model_path))
+    logging.info(f"Training completed! Model saved to {model_path}.zip")
 
     env.close()
 
